@@ -1,0 +1,104 @@
+name: yelp19_shopping_business_text_pp_rnn
+num_runs: 1
+num_workers: 1
+gpus: !!python/tuple [1]
+seed: 1
+dtype: float32
+
+model:
+  module: dpp.models
+  name: TextTPP
+  args:
+    tpp_model:
+      module: dpp.models
+      name: BoWTPP
+      args:
+        input_dim: 2
+        language_embedding_size: 800 # this should match the size of the output of the text model
+        embedding_size: [64] # mark embedding size of the mtpp
+        inv_sampling_size: 1000
+        cell_type:
+          module: torch.nn
+          name: LSTM
+          args:
+            hidden_size: [16, 64, 128, 256]
+            num_layers: 1
+            dropout: 0
+        n_markers: 0
+        ignore_index: -1
+        metrics: !!python/tuple
+          - module: tyche.loss
+            name: MSELoss
+            args:
+              reduction: sum
+    language_model:
+      module: gentext.models.languagemodels
+      name: DynamicLM
+      args:
+        train_word_embeddings: false
+        decoder:
+          module: gentext.models.blocks
+          name: LMDecoderRNN
+          args:
+            num_layers: 1
+            hidden_dim: 1024
+            dropout: 0
+        metrics: !!python/tuple
+          - module: gentext.trainer
+            name: Perplexity
+            args:
+              reduce: sum
+
+data_loader:
+  module: dpp.data.loaders
+  name: TextPointLoader
+  args:
+    server: mp-dellserv-01.iais.fraunhofer.de:27017
+    db: yelp
+    data_collection: review_shopping_by_business
+    emb_dim: glove.6B.300d
+    voc_size: 3000
+    min_freq: 5
+    path_to_vectors: "./vectors"
+    batch_size: 256
+    bptt_len: 20
+    time_fix_len: null
+    text_fix_len: 80
+    t_max: null
+    lower: true
+    punctuation: true
+
+optimizer:
+  module: torch.optim
+  name: Adadelta
+  args:
+    lr: 1.0
+
+language_optimizer:
+  module: torch.optim
+  name: Adam
+  args:
+    lr: 0.0002
+
+trainer:
+  module: dpp.trainer
+  name: PointTextTrainer
+  args:
+    bm_metric: MSELoss
+    save_after_epoch: 10
+    reconstruction_every: 50
+    num_rec_sentences: 20
+    schedulers: !!python/tuple
+      - module: tyche.utils.param_scheduler
+        name: ConstantScheduler
+        label: beta_scheduler
+        args:
+          beta: 1.0
+  epochs: 50
+  save_dir: "/scratch/results/dpp/yelp/saved/"
+  logging:
+    tensorboard_dir: "/scratch/results/dpp/yelp/logging/tensorboard/"
+    logging_dir: "/scratch/results/dpp/yelp/logging/raw/"
+    formatters:
+      verbose: "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
+      simple: "%(levelname)s %(asctime)s %(message)s"

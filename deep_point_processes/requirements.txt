@@ -1,0 +1,10 @@
+scipy
+pymongo
+bson
+tqdm
+spacy
+pandas
+matplotlib
+numpy
+torch
+

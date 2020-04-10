@@ -1,0 +1,64 @@
+name: yelp_shopping_business_rnn
+num_runs: 1
+num_workers: 1
+gpus: !!python/tuple [2]
+seed: 1
+
+model:
+  module: dpp.models
+  name: ARTPP
+  args:
+    input_dim: 2
+    embedding_size: 16
+    cell_type:
+      module: torch.nn
+      name: LSTM
+      args:
+        hidden_size: [16, 18]
+        num_layers: 1
+        dropout: 0
+    output_dim: 1
+    inv_sampling_size: 1000
+    n_markers: 0
+    ignore_index: -1
+    metrics: !!python/tuple
+      - module: tyche.loss
+        name: MSELoss
+        args:
+          reduction: sum
+
+data_loader:
+  module: dpp.data.loaders
+  name: BasicPointLoader
+  args:
+    server: mp-dellserv-01:27017
+    db: yelp
+    data_collection: review_shopping_by_business
+    batch_size: 32
+    bptt_len: 50
+    fix_len: null
+    bow_size: 2000
+    t_max: null
+
+optimizer:
+  module: torch.optim
+  name: Adam
+  args:
+    lr: 0.001
+    #    momentum: 0.9
+    weight_decay: 0.001
+
+trainer:
+  module: dpp.trainer
+  name: BaseTrainingProcedure
+  args:
+    bm_metric: MSELoss
+    save_after_epoch: 10
+  epochs: 500
+  save_dir: "/tmp/dpp/saved/"
+  logging:
+    tensorboard_dir: "/tmp/dpp/logging/tensorboard/"
+    logging_dir: "/tmp/dpp/logging/raw/"
+    formatters:
+      verbose: "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
+      simple: "%(levelname)s %(asctime)s %(message)s"

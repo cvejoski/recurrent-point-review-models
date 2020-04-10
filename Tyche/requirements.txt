@@ -1,0 +1,8 @@
+tqdm
+numpy
+tensorboardX
+torch
+torchtext
+spacy
+revtok
+pymongo

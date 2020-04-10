@@ -1,0 +1,23 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+pytest-cov = "*"
+ipython = "*"
+
+[packages]
+tqdm = "*"
+numpy = "*"
+tensorboardX = "*"
+spacy = "*"
+pymongo = "*"
+deep-point-processes = {editable = true,path = "."}
+torch = {file = "https://download.pytorch.org/whl/cpu/torch-1.1.0-cp36-cp36m-linux_x86_64.whl"}
+sklearn = "*"
+pyyaml = "*"
+
+[requires]
+python_version = "3.6"

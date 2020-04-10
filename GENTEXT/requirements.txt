@@ -1,0 +1,9 @@
+torch
+torchtext
+spacy
+tqdm
+numpy
+tensorboardX
+pylab
+
+
